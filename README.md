@@ -2,7 +2,7 @@
 
 Sistema de gestión para spa de mascotas: panel administrativo + web pública de reservas.
 
-**Migrado de Spring Boot (Java) a Node.js + Express + Sequelize + MySQL.**
+** Node.js + Express + Sequelize + MySQL.**
 
 ---
 
