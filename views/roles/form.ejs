@@ -1,0 +1,87 @@
+<style>
+    .btn-spa { background-color: #f50057; color: white; border: none; border-radius: 50px; }
+    .btn-spa:hover { background-color: #d4004b; color: white; }
+</style>
+
+<%
+    // Iconos decorativos por módulo (solo estético, no afecta la lógica de permisos).
+    const iconosModulo = {
+        'Clientes': '👥', 'Mascotas': '🐕', 'Citas': '📅', 'Servicios': '✂️',
+        'Administración': '👤', 'Empleados': '🧑‍💼', 'Pagos': '💳',
+        'Productos': '📦', 'Reseñas': '⭐', 'Turnos': '🗓️'
+    };
+%>
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/roles" class="btn btn-outline-secondary btn-sm me-3">← Volver</a>
+    <h2 class="fw-bold mb-0"><%= rol.id ? 'Editar Rol: ' + rol.nombre : 'Nuevo Rol' %></h2>
+</div>
+
+<% if (error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="card shadow-sm" style="max-width: 640px;">
+    <div class="card-body p-4">
+
+        <form action="<%= rol.id ? '/roles/' + rol.id + '/editar' : '/roles/nuevo' %>" method="post">
+
+            <!-- Nombre del rol -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Nombre del Rol</label>
+                <input type="text" name="nombre" class="form-control"
+                       value="<%= rol.nombre || '' %>"
+                       placeholder="Ej: Veterinario, Cajero, Groomer..." required>
+                <div class="form-text">El nombre identifica al rol en el sistema.</div>
+            </div>
+
+            <hr class="my-3">
+            <h5 class="fw-bold mb-3">🔐 Permisos por módulo</h5>
+
+            <!-- Un bloque por módulo, generado desde el catálogo de permisos (tabla "permisos") -->
+            <% gruposPermisos.forEach(function (grupo) { %>
+                <div class="card border-0 bg-light mb-3 p-3 <%= grupo.modulo === 'Administración' ? 'border-warning border' : '' %>">
+                    <div class="fw-semibold mb-2">
+                        <%= iconosModulo[grupo.modulo] || '🔹' %> <%= grupo.modulo %>
+                        <% if (grupo.modulo === 'Administración') { %>
+                            <span class="badge bg-warning text-dark ms-1">Sensible</span>
+                        <% } %>
+                    </div>
+                    <div class="d-flex flex-wrap gap-4">
+                        <% grupo.permisos.forEach(function (permiso) { %>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       id="permiso<%= permiso.id %>"
+                                       name="permisos" value="<%= permiso.id %>"
+                                       <%= permisoIdsAsignados.includes(String(permiso.id)) ? 'checked' : '' %>>
+                                <label class="form-check-label" for="permiso<%= permiso.id %>">
+                                    <%= permiso.nombre %>
+                                </label>
+                            </div>
+                        <% }); %>
+                    </div>
+                    <% if (grupo.modulo === 'Administración') { %>
+                        <div class="form-text text-warning mt-1">
+                            ⚠️ Estos permisos dan acceso a crear/editar usuarios y roles.
+                        </div>
+                    <% } %>
+                </div>
+            <% }); %>
+
+            <% if (!gruposPermisos.length) { %>
+                <div class="alert alert-warning">
+                    No hay permisos en el catálogo todavía. Corre <code>npm run seed</code>
+                    para cargarlos, o créalos desde la base de datos (tabla <code>permisos</code>).
+                </div>
+            <% } %>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-spa px-4">
+                    <span><%= rol.id ? '💾 Guardar Cambios' : '➕ Crear Rol' %></span>
+                </button>
+                <a href="/roles" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+
+        </form>
+    </div>
+</div>

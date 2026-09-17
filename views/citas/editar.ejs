@@ -1,0 +1,310 @@
+<style>
+.search-wrap { position: relative; }
+.search-wrap input { width: 100%; }
+.autocomplete-list {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff; border: 1px solid #d0d0d0; border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.10); z-index: 999;
+    max-height: 220px; overflow-y: auto; display: none;
+}
+.autocomplete-list li {
+    padding: 9px 14px; cursor: pointer; font-size: 13px;
+    border-bottom: 1px solid #f0f0f0; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.autocomplete-list li:last-child { border-bottom: none; }
+.autocomplete-list li:hover { background: #eaf3de; }
+.autocomplete-list li .pet-owner { font-size: 11px; color: #888; }
+
+.servicios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+    gap: 10px; margin-top: 4px;
+}
+.servicio-check-card {
+    border: 2px solid #e8e8e8; border-radius: 10px;
+    padding: 12px 14px; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex; align-items: flex-start; gap: 10px;
+    user-select: none;
+}
+.servicio-check-card:hover { border-color: #a8cc6a; background: #f7fbf0; }
+.servicio-check-card.selected { border-color: #639922; background: #eaf3de; }
+.servicio-check-card input[type="checkbox"] { display: none; }
+.svc-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.svc-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.svc-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+.resumen-servicios {
+    background: #f7fbf0; border: 1px solid #c5e09a; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; margin-top: 10px; display: none;
+}
+.resumen-servicios.visible { display: block; }
+.resumen-total { font-weight: 700; color: #3b6d11; }
+.field-error { color: #a32d2d; font-size: 12px; margin-top: 4px; }
+.form-section-label {
+    font-size: 12px; font-weight: 700; color: #639922;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 12px; padding-bottom: 6px;
+    border-bottom: 1px solid #e8e8e8;
+}
+</style>
+
+<div class="toolbar">
+    <span class="section-title">Editar cita</span>
+    <a href="/citas" class="btn">← Volver</a>
+</div>
+
+<!-- Banner: estado de la cita -->
+<div style="background:#fff8e1; border-left:4px solid #f9a825; border-radius:6px;
+            padding:10px 16px; margin-bottom:16px; font-size:13px; color:#6d4c00;">
+    ✏️ Editando cita de
+    <strong><%= cita.mascota.nombre %></strong>
+    (<span><%= cita.mascota.especie %></span>) —
+    Estado actual: <strong><%= cita.estado %></strong>
+</div>
+
+<!-- Error de fecha -->
+<% if (errorFecha) { %>
+    <div style="background:#fcebeb; border-left:4px solid #e53e3e; border-radius:6px;
+                padding:10px 16px; margin-bottom:16px; font-size:13px; color:#a32d2d;">
+        ⚠️ <span><%= errorFecha %></span>
+    </div>
+<% } %>
+
+<div class="card form-card" style="max-width: 800px;">
+    <form action="/citas/<%= cita.id %>/editar" method="post" id="formEditarCita">
+
+        <!-- ── Mascota ─────────────────────────────────────────────────── -->
+        <p class="form-section-label">🐾 Mascota</p>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label>Mascota asignada</label>
+            <!-- Muestra la mascota actual; permite cambiarla buscando -->
+            <div id="mascotaSeleccionada"
+                 style="background:#e8f4fd; border-radius:6px; padding:8px 12px;
+                        font-size:13px; color:#185fa5;">
+                ✔ <span id="mascotaLabel"><%= cita.mascota.nombre %> (<%= cita.mascota.especie %>)<%= cita.mascota.cliente ? ' · ' + cita.mascota.cliente.nombre : '' %></span>
+                <button type="button" onclick="limpiarMascota()"
+                        style="border:none;background:none;cursor:pointer;color:#888;margin-left:8px;">
+                    Cambiar ✖
+                </button>
+            </div>
+            <div class="search-wrap" id="searchWrap" style="display:none; margin-top:6px;">
+                <input type="text" id="buscarMascota"
+                       placeholder="Escribe el nombre de la mascota o del dueño..."
+                       autocomplete="off" />
+                <ul class="autocomplete-list" id="autoList"></ul>
+            </div>
+            <input type="hidden" name="mascotaId" id="mascotaId"
+                   value="<%= cita.mascotaId %>" required />
+        </div>
+
+        <!-- ── Servicios ───────────────────────────────────────────────── -->
+        <p class="form-section-label">✂️ Servicios <span style="font-weight:400;color:#aaa;">(modifica si es necesario)</span></p>
+
+        <div class="servicios-grid" id="serviciosGrid">
+            <% servicios.forEach(function (s) { %>
+                <% const marcado = serviciosSeleccionados.includes(String(s.id)); %>
+                <label class="servicio-check-card<%= marcado ? ' selected' : '' %>"
+                       data-id="<%= s.id %>"
+                       data-precio="<%= s.precio %>"
+                       data-duracion="<%= s.duracionMinutos %>">
+                    <input type="checkbox" name="servicioIds" value="<%= s.id %>"
+                           <%= marcado ? 'checked' : '' %> />
+                    <span class="svc-icon"><%= s.icono %></span>
+                    <div>
+                        <div class="svc-name"><%= s.nombre %></div>
+                        <div class="svc-meta">
+                            <span>S/ <%= fmtPrecio(s.precio) %></span>
+                            · <span><%= s.duracionMinutos %> min</span>
+                        </div>
+                    </div>
+                </label>
+            <% }); %>
+        </div>
+
+        <div class="resumen-servicios" id="resumenServicios">
+            <span id="resumenTexto"></span> —
+            <span class="resumen-total" id="resumenTotal"></span>
+            · <span id="resumenDuracion"></span>
+        </div>
+        <div id="errorServicios" class="field-error" style="display:none;">
+            Selecciona al menos un servicio.
+        </div>
+
+        <!-- ── Fecha y hora ─────────────────────────────────────────────── -->
+        <p class="form-section-label" style="margin-top:20px;">📅 Fecha y hora</p>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Fecha <span style="color:#e53e3e;">*</span></label>
+                <input type="date" id="fecha" name="fecha"
+                       value="<%= fmtFecha(cita.fecha) %>"
+                       min="<%= hoy %>" required />
+                <span class="field-error" id="errorFechaInline"></span>
+            </div>
+            <div class="form-group">
+                <label>Hora <span style="color:#e53e3e;">*</span></label>
+                <input type="time" id="hora" name="hora"
+                       value="<%= fmtHora(cita.hora) %>"
+                       min="08:00" max="19:00" required />
+            </div>
+        </div>
+
+        <!-- ── Responsable y notas ──────────────────────────────────────── -->
+        <p class="form-section-label" style="margin-top:20px;">👤 Responsable y notas</p>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Responsable</label>
+                <select name="responsable">
+                    <option value="Sofía R." <%= cita.responsable === 'Sofía R.' ? 'selected' : '' %>>Sofía R.</option>
+                    <option value="Javier M." <%= cita.responsable === 'Javier M.' ? 'selected' : '' %>>Javier M.</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notas</label>
+                <input type="text" name="notas"
+                       value="<%= cita.notas || '' %>"
+                       placeholder="Alergias, instrucciones especiales..." />
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:24px;">
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a href="/citas" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<!-- JSON de mascotas para autocomplete y lógica frontend -->
+<script>
+    (function() {
+        const MASCOTAS = <%- JSON.stringify(mascotas) %>;
+
+        // ── Autocomplete ──────────────────────────────────────────────────────────────
+        const inputBuscar   = document.getElementById('buscarMascota');
+        const autoList      = document.getElementById('autoList');
+        const mascotaIdEl   = document.getElementById('mascotaId');
+        const mascotaSelDiv = document.getElementById('mascotaSeleccionada');
+        const mascotaLabelEl = document.getElementById('mascotaLabel');
+        const searchWrap    = document.getElementById('searchWrap');
+
+        function normalizarTexto(str) {
+            return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        if (inputBuscar) {
+            inputBuscar.addEventListener('input', () => {
+                const q = normalizarTexto(inputBuscar.value);
+                if (q.length < 1) { autoList.style.display = 'none'; return; }
+                const filtradas = MASCOTAS.filter(m => {
+                    return normalizarTexto(m.nombre).includes(q) ||
+                           normalizarTexto(m.cliente ? m.cliente.nombre : '').includes(q);
+                }).slice(0, 8);
+
+                autoList.innerHTML = '';
+                if (!filtradas.length) { autoList.style.display = 'none'; return; }
+                filtradas.forEach(m => {
+                    const li = document.createElement('li');
+                    const dueno = m.cliente ? m.cliente.nombre : '—';
+                    li.innerHTML = `<span><strong>${m.nombre}</strong> · ${m.especie}</span>
+                                    <span class="pet-owner">👤 ${dueno}</span>`;
+                    li.addEventListener('click', () => seleccionarMascota(m));
+                    autoList.appendChild(li);
+                });
+                autoList.style.display = 'block';
+            });
+        }
+
+        function seleccionarMascota(m) {
+            mascotaIdEl.value = m.id;
+            const dueno = m.cliente ? ' · ' + m.cliente.nombre : '';
+            mascotaLabelEl.textContent = m.nombre + ' (' + m.especie + ')' + dueno;
+            searchWrap.style.display = 'none';
+            mascotaSelDiv.style.display = 'block';
+            if (inputBuscar) { inputBuscar.value = ''; autoList.style.display = 'none'; }
+        }
+
+        window.limpiarMascota = function() {
+            mascotaIdEl.value = '';
+            mascotaSelDiv.style.display = 'none';
+            searchWrap.style.display = 'block';
+            if (inputBuscar) inputBuscar.focus();
+        }
+
+        document.addEventListener('click', e => {
+            if (autoList && !e.target.closest('.search-wrap')) autoList.style.display = 'none';
+        });
+
+        // ── Checkboxes de servicios ───────────────────────────────────────────────────
+        const cards = document.querySelectorAll('.servicio-check-card');
+        const resumen         = document.getElementById('resumenServicios');
+        const resumenTexto    = document.getElementById('resumenTexto');
+        const resumenTotal    = document.getElementById('resumenTotal');
+        const resumenDuracion = document.getElementById('resumenDuracion');
+
+        cards.forEach(card => {
+            const cb = card.querySelector('input[type="checkbox"]');
+            cb.addEventListener('change', () => {
+                card.classList.toggle('selected', cb.checked);
+                actualizarResumen();
+            });
+        });
+
+        function actualizarResumen() {
+            const sel = [...cards].filter(c => c.querySelector('input').checked);
+            if (!sel.length) { resumen.classList.remove('visible'); return; }
+            let total = 0, dur = 0, nombres = [];
+            sel.forEach(c => {
+                total    += parseFloat(c.dataset.precio  || 0);
+                dur      += parseInt(c.dataset.duracion  || 0);
+                nombres.push(c.querySelector('.svc-name').textContent);
+            });
+            resumenTexto.textContent    = nombres.join(' + ');
+            resumenTotal.textContent    = 'S/ ' + total.toFixed(2);
+            resumenDuracion.textContent = dur + ' min';
+            resumen.classList.add('visible');
+        }
+
+        // Mostrar resumen al cargar (servicios preseleccionados)
+        actualizarResumen();
+
+        // ── Validación fecha ──────────────────────────────────────────────────────────
+        const inputFecha       = document.getElementById('fecha');
+        const errorFechaInline = document.getElementById('errorFechaInline');
+
+        inputFecha.addEventListener('change', () => {
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const sel = new Date(inputFecha.value + 'T00:00:00');
+            if (sel < hoy) {
+                errorFechaInline.textContent = '⚠ La fecha no puede ser anterior a hoy.';
+                inputFecha.style.borderColor = '#e53e3e';
+            } else {
+                errorFechaInline.textContent = '';
+                inputFecha.style.borderColor = '';
+            }
+        });
+
+        // ── Validación envío ──────────────────────────────────────────────────────────
+        document.getElementById('formEditarCita').addEventListener('submit', e => {
+            let ok = true;
+            if (!mascotaIdEl.value) { alert('Selecciona una mascota.'); ok = false; }
+            const algunoChecked = [...document.querySelectorAll('input[name="servicioIds"]')]
+                                  .some(cb => cb.checked);
+            if (!algunoChecked) {
+                document.getElementById('errorServicios').style.display = 'block';
+                ok = false;
+            }
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const sel = new Date(inputFecha.value + 'T00:00:00');
+            if (sel < hoy) {
+                errorFechaInline.textContent = '⚠ La fecha no puede ser anterior a hoy.';
+                inputFecha.style.borderColor = '#e53e3e';
+                ok = false;
+            }
+            if (!ok) e.preventDefault();
+        });
+    })();
+</script>

@@ -1,0 +1,87 @@
+<style>
+    .btn-spa { background-color: #f50057; color: white; border: none; border-radius: 50px; }
+    .btn-spa:hover { background-color: #d4004b; color: white; }
+</style>
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/usuarios" class="btn btn-outline-secondary btn-sm me-3">← Volver</a>
+    <h2 class="fw-bold mb-0"><%= usuario.id ? 'Editar: ' + usuario.nombre : 'Nuevo Usuario' %></h2>
+</div>
+
+<!-- Alerta de error -->
+<% if (error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="card shadow-sm" style="max-width: 600px;">
+    <div class="card-body p-4">
+
+        <form action="<%= usuario.id ? '/usuarios/' + usuario.id + '/editar' : '/usuarios/nuevo' %>"
+              method="post">
+
+            <!-- Nombre -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Nombre completo</label>
+                <input type="text" name="nombre" class="form-control"
+                       value="<%= usuario.nombre || '' %>" placeholder="Ej: María García" required>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email (se usa para iniciar sesión)</label>
+                <input type="email" name="email" class="form-control"
+                       value="<%= usuario.email || '' %>" placeholder="correo@ejemplo.com" required>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Contraseña
+                    <% if (usuario.id) { %>
+                        <span class="text-muted fw-normal">(dejar vacío para mantener la actual)</span>
+                    <% } %>
+                </label>
+                <input type="password" name="password" class="form-control"
+                       placeholder="Mínimo 6 caracteres"
+                       <%= usuario.id ? '' : 'required' %>>
+            </div>
+
+            <!-- Rol -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Rol</label>
+                <select name="rolId" class="form-select" required>
+                    <option value="">— Seleccionar rol —</option>
+                    <% roles.forEach(function (r) { %>
+                        <option value="<%= r.id %>"
+                                <%= String(usuario.rolId) === String(r.id) ? 'selected' : '' %>>
+                            <%= r.nombre %>
+                        </option>
+                    <% }); %>
+                </select>
+                <div class="form-text">
+                    El rol define qué módulos puede ver este usuario.
+                    <a href="/roles" target="_blank">Ver/crear roles</a>
+                </div>
+            </div>
+
+            <!-- Activo (solo en edición) -->
+            <% if (usuario.id) { %>
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="activo"
+                           name="activo" <%= usuario.activo ? 'checked' : '' %>>
+                    <label class="form-check-label" for="activo">
+                        Usuario activo (puede iniciar sesión)
+                    </label>
+                </div>
+            <% } %>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-spa px-4">
+                    <span><%= usuario.id ? '💾 Guardar Cambios' : '➕ Crear Usuario' %></span>
+                </button>
+                <a href="/usuarios" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+
+        </form>
+    </div>
+</div>

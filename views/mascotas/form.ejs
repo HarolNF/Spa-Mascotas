@@ -1,0 +1,117 @@
+<div class="toolbar">
+    <span class="section-title"><%= mascota.id ? 'Editar mascota' : 'Registrar nueva mascota' %></span>
+    <a href="/mascotas" class="btn">← Volver a mascotas</a>
+</div>
+
+<div class="card form-card">
+
+    <!-- Errores de validación -->
+    <% if (errores && errores.length) { %>
+        <div style="background:#fcebeb; border-left:4px solid #e53e3e; border-radius:6px;
+                    padding:12px 16px; margin-bottom:16px; font-size:13px; color:#a32d2d;">
+            <% errores.forEach(function (e) { %>
+                <div>⚠️ <%= e %></div>
+            <% }); %>
+        </div>
+    <% } %>
+
+    <form action="<%= mascota.id ? '/mascotas/' + mascota.id + '/editar' : '/mascotas/nueva' %>"
+          method="post">
+
+        <!-- ── Sección: Datos de la mascota ───────────────────────── -->
+        <p style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase;
+                  letter-spacing:0.05em; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:8px;">
+            🐾 Datos de la mascota
+        </p>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="nombre">Nombre *</label>
+                <input type="text" id="nombre" name="nombre"
+                       value="<%= mascota.nombre || '' %>"
+                       placeholder="Ej: Rocky" required/>
+            </div>
+
+            <div class="form-group">
+                <label for="especie">Especie *</label>
+                <select id="especie" name="especie" required>
+                    <option value="">— Seleccione —</option>
+                    <% ['Perro','Gato','Conejo','Otro'].forEach(function (op) { %>
+                        <option value="<%= op %>" <%= mascota.especie === op ? 'selected' : '' %>>
+                            <%= op === 'Perro' ? '🐶 Perro' : (op === 'Gato' ? '🐱 Gato' : (op === 'Conejo' ? '🐰 Conejo' : 'Otro')) %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="raza">Raza</label>
+                <input type="text" id="raza" name="raza"
+                       value="<%= mascota.raza || '' %>"
+                       placeholder="Ej: Golden Retriever"/>
+            </div>
+
+            <div class="form-group">
+                <label for="tamano">Tamaño</label>
+                <select id="tamano" name="tamano">
+                    <option value="">— Seleccione —</option>
+                    <option value="Pequeño" <%= mascota.tamano === 'Pequeño' ? 'selected' : '' %>>Pequeño (hasta 10 kg)</option>
+                    <option value="Mediano" <%= mascota.tamano === 'Mediano' ? 'selected' : '' %>>Mediano (10–25 kg)</option>
+                    <option value="Grande"  <%= mascota.tamano === 'Grande'  ? 'selected' : '' %>>Grande (más de 25 kg)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="edad">Edad (años)</label>
+                <input type="number" id="edad" name="edad"
+                       value="<%= mascota.edad !== null && mascota.edad !== undefined ? mascota.edad : '' %>"
+                       min="0" max="30" placeholder="Ej: 3"/>
+            </div>
+
+            <div class="form-group">
+                <label for="genero">Género</label>
+                <select id="genero" name="genero">
+                    <option value="">— Seleccione —</option>
+                    <option value="Macho"  <%= mascota.genero === 'Macho'  ? 'selected' : '' %>>Macho</option>
+                    <option value="Hembra" <%= mascota.genero === 'Hembra' ? 'selected' : '' %>>Hembra</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ── Sección: Dueño ─────────────────────────────────────── -->
+        <p style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase;
+                  letter-spacing:0.05em; margin: 20px 0 14px; border-bottom:1px solid #eee; padding-bottom:8px;">
+            👤 Dueño de la mascota
+        </p>
+
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">
+                <label for="clienteId">Seleccionar cliente *</label>
+                <!--
+                    clientePreseleccionado lo agrega el controlador cuando viene
+                    desde /mascotas/nueva?clienteId=X ("Agregar mascota" del cliente)
+                -->
+                <select id="clienteId" name="clienteId" required>
+                    <option value="">— Busca y selecciona el dueño —</option>
+                    <% clientes.forEach(function (c) { %>
+                        <option value="<%= c.id %>"
+                                <%= String(clientePreseleccionado) === String(c.id) ? 'selected' : '' %>>
+                            <%= c.nombre %> · <%= c.telefono || 'sin teléfono' %>
+                        </option>
+                    <% }); %>
+                </select>
+                <small style="color:#888; font-size:11px; margin-top:4px;">
+                    ¿El cliente no existe aún?
+                    <a href="/clientes/nuevo" style="color:#639922;">Regístralo primero aquí</a>
+                </small>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span><%= mascota.id ? 'Actualizar mascota' : 'Guardar mascota' %></span>
+            </button>
+            <a href="/mascotas" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div>

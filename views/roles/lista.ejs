@@ -1,0 +1,72 @@
+<style>
+    .btn-spa { background-color: #f50057; color: white; border: none; border-radius: 50px; }
+    .btn-spa:hover { background-color: #d4004b; color: white; }
+</style>
+
+<!-- Alertas -->
+<% if (exito) { %>
+    <div class="alert alert-success alert-dismissible fade show">
+        <span><%= exito %></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+<% if (error) { %>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <span><%= error %></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<!-- Cabecera -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Roles y Permisos</h2>
+        <p class="text-muted mb-0">Define qué puede ver y hacer cada rol</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/usuarios" class="btn btn-outline-secondary btn-sm">👤 Usuarios</a>
+        <a href="/roles/nuevo" class="btn btn-spa">➕ Nuevo Rol</a>
+    </div>
+</div>
+
+<!-- Cards de roles -->
+<div class="row g-3">
+    <% roles.forEach(function (rol) { %>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center"
+                     style="background: #fff1f3;">
+                    <span class="fw-bold"><%= rol.nombre %></span>
+                    <div class="d-flex gap-1">
+                        <a href="/roles/<%= rol.id %>/editar" class="btn btn-sm btn-outline-primary">✏️</a>
+                        <form action="/roles/<%= rol.id %>/eliminar" method="post" class="d-inline"
+                              onsubmit="return confirm('¿Eliminar rol <%= rol.nombre %>?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">
+                        Permisos activos: <strong><%= rol.permisos.length %></strong>
+                    </p>
+                    <div class="d-flex flex-wrap gap-1">
+                        <% rol.permisos.forEach(function (permiso) { %>
+                            <span class="badge <%= permiso.codigo === 'GESTIONAR_USUARIOS' ? 'bg-danger' : (permiso.codigo.startsWith('GESTIONAR_') ? 'bg-primary' : 'bg-info text-dark') %>">
+                                <%= permiso.nombre %>
+                            </span>
+                        <% }); %>
+                        <% if (!rol.permisos.length) { %>
+                            <span class="text-muted small fst-italic">Sin permisos asignados</span>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+
+    <% if (!roles.length) { %>
+        <div class="col-12">
+            <div class="alert alert-info">No hay roles creados aún.</div>
+        </div>
+    <% } %>
+</div>

@@ -1,0 +1,95 @@
+<div class="toolbar">
+    <span class="section-title">Gestión de citas</span>
+    <a href="/citas/nueva" class="btn btn-primary">+ Nueva cita</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Mascota</th>
+                <th>Dueño</th>
+                <th>Servicios</th>
+                <th>Total</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% citas.forEach(function (c) { %>
+                <tr>
+                    <td><%= c.mascota ? c.mascota.nombre : '—' %></td>
+                    <td><%= (c.mascota && c.mascota.cliente) ? c.mascota.cliente.nombre : '—' %></td>
+
+                    <!-- Servicios: lista separada por coma con iconos -->
+                    <td>
+                        <% if (c.servicios && c.servicios.length) { %>
+                            <% c.servicios.forEach(function (s, i) { %>
+                                <span><%= s.icono %></span>
+                                <span><%= s.nombre %></span><%= i < c.servicios.length - 1 ? ', ' : '' %>
+                            <% }); %>
+                        <% } else { %>
+                            <span style="color:#aaa;">—</span>
+                        <% } %>
+                    </td>
+
+                    <!-- Total precio -->
+                    <td style="font-weight:600; color:#3b6d11;">
+                        <%= (c.servicios && c.servicios.length) ? 'S/ ' + fmtPrecio(c.getTotalPrecio()) : '—' %>
+                    </td>
+
+                    <td><%= fmtFecha(c.fecha) %></td>
+                    <td><%= fmtHora(c.hora) %></td>
+                    <td><%= oGuion(c.responsable) %></td>
+                    <td>
+                        <span class="<%= claseEstado(c.estado) %>"><%= c.estado %></span>
+                    </td>
+                    <td style="white-space: nowrap;">
+
+                        <!-- Editar: PENDIENTE o EN_CURSO -->
+                        <% if (c.estado === 'PENDIENTE' || c.estado === 'EN_CURSO') { %>
+                            <a href="/citas/<%= c.id %>/editar" class="btn btn-sm" title="Editar cita">✏️ Editar</a>
+                        <% } %>
+
+                        <!-- Iniciar: solo PENDIENTE -->
+                        <% if (c.estado === 'PENDIENTE') { %>
+                            <form action="/citas/<%= c.id %>/iniciar" method="post" style="display:inline">
+                                <button type="submit" class="btn btn-sm">▶ Iniciar</button>
+                            </form>
+                        <% } %>
+
+                        <!-- Completar: PENDIENTE o EN_CURSO -->
+                        <% if (c.estado === 'PENDIENTE' || c.estado === 'EN_CURSO') { %>
+                            <form action="/citas/<%= c.id %>/completar" method="post" style="display:inline">
+                                <button type="submit" class="btn btn-sm">✔ Completar</button>
+                            </form>
+                        <% } %>
+
+                        <!-- Reprogramar: solo PENDIENTE -->
+                        <% if (c.estado === 'PENDIENTE') { %>
+                            <a href="/citas/<%= c.id %>/reprogramar" class="btn btn-sm">📅 Reprogramar</a>
+                        <% } %>
+
+                        <!-- Cancelar: si no está COMPLETADO ni CANCELADO -->
+                        <% if (c.estado !== 'COMPLETADO' && c.estado !== 'CANCELADO') { %>
+                            <form action="/citas/<%= c.id %>/cancelar" method="post" style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('¿Cancelar esta cita?')">✖ Cancelar</button>
+                            </form>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }); %>
+            <% if (!citas.length) { %>
+                <tr>
+                    <td colspan="9" style="text-align:center;color:#888;padding:20px;">
+                        Sin citas registradas.
+                    </td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>

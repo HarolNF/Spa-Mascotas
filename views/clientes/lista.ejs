@@ -1,0 +1,45 @@
+<div class="toolbar">
+    <span class="section-title">Clientes registrados</span>
+    <a href="/clientes/nuevo" class="btn btn-primary">+ Nuevo cliente</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Mascotas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% clientes.forEach(function (c) { %>
+                <tr>
+                    <td><%= c.nombre %></td>
+                    <td><%= oGuion(c.email) %></td>
+                    <td><%= oGuion(c.telefono) %></td>
+                    <td><%= c.mascotas ? c.mascotas.length : 0 %></td>
+                    <td>
+                        <a href="/clientes/<%= c.id %>" class="btn btn-sm">Ver</a>
+                        <a href="/clientes/<%= c.id %>/editar" class="btn btn-sm">Editar</a>
+                        <% if (tienePermiso('ELIMINAR_CLIENTES')) { %>
+                            <form action="/clientes/<%= c.id %>/eliminar" method="post" style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('¿Eliminar cliente y todas sus citas?')">
+                                    Eliminar
+                                </button>
+                            </form>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }); %>
+            <% if (!clientes.length) { %>
+                <tr>
+                    <td colspan="5" style="text-align:center;color:#888">Sin clientes registrados.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>

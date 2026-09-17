@@ -1,0 +1,72 @@
+<div class="toolbar">
+    <span class="section-title">Detalle de: <%= cliente.nombre %></span>
+    <a href="/clientes" class="btn">Volver</a>
+</div>
+
+<div class="card" style="margin-bottom: 20px; padding: 20px;">
+    <h3>Información del Cliente</h3>
+    <p><strong>Nombre:</strong> <span><%= cliente.nombre %></span></p>
+    <p><strong>Email:</strong> <span><%= oGuion(cliente.email) %></span></p>
+    <p><strong>Teléfono:</strong> <span><%= oGuion(cliente.telefono) %></span></p>
+    <p><strong>Dirección:</strong> <span><%= oGuion(cliente.direccion) %></span></p>
+</div>
+
+<div class="card" style="margin-bottom: 20px; padding: 20px;">
+    <h3>Mascotas Registradas</h3>
+    <% if (cliente.mascotas && cliente.mascotas.length) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Especie</th>
+                    <th>Raza</th>
+                    <th>Edad</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% cliente.mascotas.forEach(function (m) { %>
+                    <tr>
+                        <td><%= m.nombre %></td>
+                        <td><%= m.especie %></td>
+                        <td><%= oGuion(m.raza) %></td>
+                        <td><%= oGuion(m.edad) %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <p style="color:#888;">No tiene mascotas registradas.</p>
+    <% } %>
+</div>
+
+<div class="card" style="padding: 20px;">
+    <h3>Historial de Citas</h3>
+    <% if (citas.length) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Mascota</th>
+                    <th>Servicio</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% citas.forEach(function (c) { %>
+                    <tr>
+                        <td><%= fmtFecha(c.fecha) %></td>
+                        <td><%= fmtHora(c.hora) %></td>
+                        <td><%= c.mascota ? c.mascota.nombre : '—' %></td>
+                        <td><%= c.getNombresServicios() %></td>
+                        <td>
+                            <span class="<%= claseEstado(c.estado) %>"><%= c.estado %></span>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <p style="color:#888;">No tiene historial de citas.</p>
+    <% } %>
+</div>

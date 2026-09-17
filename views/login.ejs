@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Pet Spa Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            prefix: 'tw-',
+            corePlugins: { preflight: false },
+            theme: { extend: { colors: { spa: '#f50057', spaDark: '#d4004b' } } }
+        };
+    </script>
+
+    <style>
+        :root {
+            --color-spa: #f50057;
+            --fondo-suave: #fff1f3;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff1f3 0%, #fce4ec 100%);
+        }
+
+        .btn-spa {
+            background-color: var(--color-spa);
+            color: white;
+            border-radius: 50px;
+            border: none;
+            transition: 0.3s;
+        }
+
+        .btn-spa:hover {
+            background-color: #d4004b;
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .btn-spa:disabled {
+            background-color: #e39ab0;
+            transform: none;
+        }
+
+        .login-card {
+            border: none;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(245, 0, 87, 0.12);
+        }
+
+        .brand-paw {
+            font-size: 3rem;
+            filter: drop-shadow(0 2px 6px rgba(245,0,87,0.25));
+        }
+
+        .alert-danger, .alert-warning, .alert-success {
+            border-radius: 12px;
+            font-size: 0.88rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--color-spa);
+            box-shadow: 0 0 0 0.2rem rgba(245, 0, 87, 0.15);
+        }
+
+        a { color: var(--color-spa); }
+
+        .toggle-password {
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        #captchaPregunta {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        #temporizadorBloqueo {
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body class="d-flex align-items-center vh-100">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+
+                <div class="card login-card">
+                    <div class="card-body p-5">
+
+                        <!-- Encabezado -->
+                        <div class="text-center mb-4">
+                            <img src="/img/logo03.png" alt="Logo Pet Spa" style="max-height: 80px; margin-bottom: 10px;" />
+                            <h2 class="fw-bold mt-2" style="color: var(--color-spa);">Pet Spa Admin</h2>
+                            <p class="text-muted small">Ingresa tus credenciales para acceder al panel</p>
+                        </div>
+
+                        <!-- Alerta de bloqueo por intentos (contador + reloj) -->
+                        <% if (bloqueado) { %>
+                            <div class="alert alert-danger text-center py-2" id="alertaBloqueo">
+                                Demasiados intentos fallidos. Vuelve a intentarlo en
+                                <span id="temporizadorBloqueo"><%= segundosRestantes %></span> s.
+                            </div>
+                        <% } %>
+
+                        <!-- Alerta de error de credenciales -->
+                        <% if (error && !bloqueado) { %>
+                            <div class="alert alert-danger text-center py-2">
+                                <%= error %>
+                                <% if (intentosRestantes !== null) { %>
+                                    <br><small>Te quedan <%= intentosRestantes %> intento(s) antes del bloqueo temporal.</small>
+                                <% } %>
+                            </div>
+                        <% } %>
+
+                        <!-- Alerta de error de captcha -->
+                        <% if (errorCaptcha) { %>
+                            <div class="alert alert-warning text-center py-2"><%= errorCaptcha %></div>
+                        <% } %>
+
+                        <!-- Mensaje de cierre de sesión / recuperación -->
+                        <% if (mensaje) { %>
+                            <div class="alert alert-success text-center py-2"><%= mensaje %></div>
+                        <% } %>
+
+                        <!-- Formulario → POST /login -->
+                        <form action="/login" method="post" id="formLogin" autocomplete="on">
+
+                            <!-- Email -->
+                            <div class="form-floating mb-3">
+                                <input type="email"
+                                       class="form-control border-0 bg-light shadow-sm"
+                                       id="email"
+                                       name="email"
+                                       placeholder="name@example.com"
+                                       value="<%= emailPrevio %>"
+                                       required
+                                       <%= bloqueado ? 'disabled' : '' %>>
+                                <label class="text-secondary">Correo electrónico</label>
+                            </div>
+
+                            <!-- Password (con mostrar/ocultar) -->
+                            <div class="form-floating mb-3 position-relative">
+                                <input type="password"
+                                       class="form-control border-0 bg-light shadow-sm"
+                                       id="password"
+                                       name="password"
+                                       placeholder="Contraseña"
+                                       required
+                                       <%= bloqueado ? 'disabled' : '' %>>
+                                <label class="text-secondary">Contraseña</label>
+                                <span class="toggle-password position-absolute top-50 end-0 translate-middle-y me-3 text-muted"
+                                      id="togglePassword" title="Mostrar/ocultar contraseña">
+                                    👁️
+                                </span>
+                            </div>
+
+                            <!-- Captcha matemático simple -->
+                            <div class="mb-3">
+                                <label class="form-label small text-muted mb-1">
+                                    Verificación: cuánto es <span id="captchaPregunta"><%= captchaPregunta %></span> ?
+                                </label>
+                                <input type="text"
+                                       inputmode="numeric"
+                                       class="form-control border-0 bg-light shadow-sm"
+                                       id="captcha"
+                                       name="captcha"
+                                       placeholder="Escribe el resultado"
+                                       required
+                                       <%= bloqueado ? 'disabled' : '' %>>
+                            </div>
+
+                            <!-- Recordarme -->
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="recordarme" name="recordarme" <%= bloqueado ? 'disabled' : '' %>>
+                                <label class="form-check-label text-muted small" for="recordarme">
+                                    Recordarme (mantener sesión 30 días)
+                                </label>
+                            </div>
+
+                            <!-- Política de privacidad (obligatoria) -->
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="aceptaPolitica" name="aceptaPolitica" required <%= bloqueado ? 'disabled' : '' %>>
+                                <label class="form-check-label text-muted small" for="aceptaPolitica">
+                                    He leído y acepto la
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#modalPolitica">política de privacidad</a>
+                                </label>
+                            </div>
+
+                            <!-- Botón de acceso -->
+                            <button type="submit" class="btn btn-spa w-100 py-3 fw-bold" id="btnEntrar" <%= bloqueado ? 'disabled' : '' %>>
+                                ENTRAR AL PANEL
+                            </button>
+
+                            <!-- Links extra -->
+                            <div class="text-center mt-4">
+                                <a href="/recuperar-password" class="text-decoration-none small fw-medium">
+                                    ¿Olvidaste tu contraseña?
+                                </a>
+                                <hr class="my-3 text-muted">
+                                <p class="small text-muted mb-2">
+                                    ¿Quieres ver nuestra web?
+                                </p>
+                                <a href="/catalogo" class="text-decoration-none small fw-bold">
+                                    🐾 Visitar Coquetos Spa
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal política de privacidad -->
+    <div class="modal fade" id="modalPolitica" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Política de privacidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body small">
+                    <p>Los datos ingresados en este panel (correo y contraseña) se usan únicamente para
+                       validar tu identidad y darte acceso a la administración de Coquetos Spa Mascotas.</p>
+                    <p>No compartimos tus credenciales con terceros. Las contraseñas se almacenan cifradas
+                       y nunca se guardan en texto plano.</p>
+                    <p>Puedes solicitar la eliminación de tu cuenta de administrador contactando al
+                       responsable del sistema.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-spa" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mostrar / ocultar contraseña
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const campo = document.getElementById('password');
+            const esOculto = campo.getAttribute('type') === 'password';
+            campo.setAttribute('type', esOculto ? 'text' : 'password');
+            this.textContent = esOculto ? '🙈' : '👁️';
+        });
+
+        // Reloj / temporizador de bloqueo por intentos fallidos.
+        // Al llegar a 0, se recarga /login para liberar el formulario.
+        <% if (bloqueado) { %>
+        (function () {
+            let restante = <%= segundosRestantes %>;
+            const span = document.getElementById('temporizadorBloqueo');
+            const intervalo = setInterval(function () {
+                restante -= 1;
+                if (restante <= 0) {
+                    clearInterval(intervalo);
+                    window.location.href = '/login';
+                    return;
+                }
+                span.textContent = restante;
+                if (restante <= 10) {
+                    document.getElementById('alertaBloqueo').classList.add('tw-animate-pulse');
+                }
+            }, 1000);
+        })();
+        <% } %>
+    </script>
+</body>
+
+</html>

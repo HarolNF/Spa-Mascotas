@@ -1,0 +1,48 @@
+<div class="toolbar">
+    <span class="section-title">Catálogo de servicios</span>
+    <% if (tienePermiso('GESTIONAR_SERVICIOS')) { %>
+        <a href="/servicios/nuevo" class="btn btn-primary">+ Nuevo servicio</a>
+    <% } %>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Ícono</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Duración</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% servicios.forEach(function (s) { %>
+                <tr>
+                    <td style="font-size:22px;"><%= s.icono %></td>
+                    <td><%= s.nombre %></td>
+                    <td><%= oGuion(s.descripcion) %></td>
+                    <td><%= s.duracionMinutos %> min</td>
+                    <td>S/ <%= fmtPrecio(s.precio) %></td>
+                    <td>
+                        <% if (tienePermiso('GESTIONAR_SERVICIOS')) { %>
+                            <a href="/servicios/<%= s.id %>/editar" class="btn btn-sm">Editar</a>
+                            <form action="/servicios/<%= s.id %>/eliminar" method="post" style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('¿Eliminar servicio?')">Eliminar</button>
+                            </form>
+                        <% } else { %>
+                            <span style="color:#aaa; font-size:12px;">Solo lectura</span>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }); %>
+            <% if (!servicios.length) { %>
+                <tr>
+                    <td colspan="6" style="text-align:center;color:#888">Sin servicios registrados.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>

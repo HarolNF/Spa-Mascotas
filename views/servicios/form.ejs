@@ -1,0 +1,56 @@
+<div class="card form-card">
+    <h2 class="form-heading"><%= servicio.id ? 'Editar servicio' : 'Nuevo servicio' %></h2>
+
+    <form action="<%= servicio.id ? '/servicios/' + servicio.id + '/editar' : '/servicios/nuevo' %>"
+          method="post">
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" name="nombre"
+                       value="<%= servicio.nombre || '' %>" required/>
+            </div>
+            <div class="form-group">
+                <label for="icono">Ícono / Emoji</label>
+                <select id="icono" name="icono" required>
+                    <option value="" disabled <%= servicio.icono ? '' : 'selected' %>>Selecciona un ícono...</option>
+                    <%
+                        const iconos = [
+                            ['🛁', 'Baño'], ['✂️', 'Tijeras / Corte'], ['💅', 'Uñas'],
+                            ['⭐', 'Estrella / Premium'], ['🦷', 'Diente / Dental'],
+                            ['🧼', 'Jabón / Limpieza'], ['🚿', 'Ducha'], ['🐶', 'Perro'],
+                            ['🐱', 'Gato'], ['🎀', 'Moño / Estética'], ['🏥', 'Médico / Salud'],
+                            ['🐾', 'Huella'], ['❤️', 'Cuidado / Amor']
+                        ];
+                    %>
+                    <% iconos.forEach(function (par) { %>
+                        <option value="<%= par[0] %>" <%= servicio.icono === par[0] ? 'selected' : '' %>>
+                            <%= par[0] %> <%= par[1] %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="duracionMinutos">Duración (minutos)</label>
+                <input type="number" id="duracionMinutos" name="duracionMinutos"
+                       value="<%= servicio.duracionMinutos || '' %>" min="1" required/>
+            </div>
+            <div class="form-group">
+                <label for="precio">Precio (S/)</label>
+                <input type="number" step="0.01" id="precio" name="precio"
+                       value="<%= servicio.precio !== null && servicio.precio !== undefined ? servicio.precio : '' %>"
+                       min="0" required/>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" name="descripcion" rows="2"
+                          style="width: 100%; padding: 0.5rem;"><%= servicio.descripcion || '' %></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="/servicios" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div>

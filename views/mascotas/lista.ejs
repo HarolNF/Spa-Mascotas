@@ -1,0 +1,48 @@
+<div class="toolbar">
+    <span class="section-title">Mascotas registradas</span>
+    <a href="/mascotas/nueva" class="btn btn-primary">+ Nueva mascota</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Especie</th>
+                <th>Raza</th>
+                <th>Tamaño</th>
+                <th>Dueño</th>
+                <th>Última visita</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% mascotas.forEach(function (m) { %>
+                <tr>
+                    <td><%= m.nombre %></td>
+                    <td><%= oGuion(m.especie) %></td>
+                    <td><%= oGuion(m.raza) %></td>
+                    <td><%= oGuion(m.tamano) %></td>
+                    <td><%= m.cliente ? m.cliente.nombre : '—' %></td>
+                    <td><%= m.ultimaVisita ? fmtFecha(m.ultimaVisita) : '—' %></td>
+                    <td>
+                        <span class="status <%= m.estado === 'ACTIVO' ? 'status--active' : 'status--cancel' %>"><%= m.estado %></span>
+                    </td>
+                    <td>
+                        <a href="/mascotas/<%= m.id %>/editar" class="btn btn-sm">Editar</a>
+                        <form action="/mascotas/<%= m.id %>/eliminar" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('¿Eliminar esta mascota?')">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            <% }); %>
+            <% if (!mascotas.length) { %>
+                <tr>
+                    <td colspan="8" style="text-align:center;color:#888">Sin mascotas registradas.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
