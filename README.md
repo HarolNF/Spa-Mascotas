@@ -1,4 +1,4 @@
-# 🐾 Coquetos Spa de Mascotas
+#  Coquetos Spa de Mascotas
 
 Sistema de gestión para spa de mascotas: panel administrativo + web pública de reservas.
 
@@ -6,7 +6,7 @@ Sistema de gestión para spa de mascotas: panel administrativo + web pública de
 
 ---
 
-## 🧱 Stack
+##  Stack
 
 | Capa | Tecnología |
 |---|---|
@@ -24,7 +24,7 @@ Sistema de gestión para spa de mascotas: panel administrativo + web pública de
 
 ---
 
-## 🚀 Instalación
+##  Instalación
 
 ### 1. Requisitos
 - Node.js 18 o superior
